@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Consumption</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 1rem;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Energy Consumption Calculator</h1>
+        <form id="energyForm">
+            <label for="start_time">Start Time (YYYY-MM-DDTHH:MM:SS)</label>
+            <input type="text" id="start_time" name="start_time" placeholder="2024-11-30T05:21:48" required>
+            
+            <label for="end_time">End Time (YYYY-MM-DDTHH:MM:SS)</label>
+            <input type="text" id="end_time" name="end_time" placeholder="2024-11-30T06:21:48" required>
+            
+            <button type="submit">Calculate</button>
+        </form>
+        
+        <div class="response" id="response"></div>
+    </div>
+
+    <script>
+        document.getElementById("energyForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+            
+            const startTime = document.getElementById("start_time").value;
+            const endTime = document.getElementById("end_time").value;
+            const responseDiv = document.getElementById("response");
+
+            // Reset response content
+            responseDiv.innerHTML = "Calculating...";
+
+            try {
+                const response = await fetch("/v1/energyGet/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ start_time: startTime, end_time: endTime })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    responseDiv.innerHTML = `
+                        <p><strong>Total Energy:</strong> ${data.total_energy} Watt-Hours</p>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    responseDiv.innerHTML = `<p style="color: red;"><strong>Error:</strong> ${errorData.error || "Something went wrong."}</p>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<p style="color: red;"><strong>Error:</strong> ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
